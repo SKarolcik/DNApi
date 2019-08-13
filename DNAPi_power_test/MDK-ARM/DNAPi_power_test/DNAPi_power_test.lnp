@@ -1,0 +1,28 @@
+--cpu=Cortex-M4.fp
+"dnapi_power_test\startup_stm32f405xx.o"
+"dnapi_power_test\main.o"
+"dnapi_power_test\stm32f4xx_it.o"
+"dnapi_power_test\stm32f4xx_hal_msp.o"
+"dnapi_power_test\stm32f4xx_hal_dac.o"
+"dnapi_power_test\stm32f4xx_hal_dac_ex.o"
+"dnapi_power_test\stm32f4xx_hal_spi.o"
+"dnapi_power_test\stm32f4xx_hal_tim.o"
+"dnapi_power_test\stm32f4xx_hal_tim_ex.o"
+"dnapi_power_test\stm32f4xx_hal_rcc.o"
+"dnapi_power_test\stm32f4xx_hal_rcc_ex.o"
+"dnapi_power_test\stm32f4xx_hal_flash.o"
+"dnapi_power_test\stm32f4xx_hal_flash_ex.o"
+"dnapi_power_test\stm32f4xx_hal_flash_ramfunc.o"
+"dnapi_power_test\stm32f4xx_hal_gpio.o"
+"dnapi_power_test\stm32f4xx_hal_dma_ex.o"
+"dnapi_power_test\stm32f4xx_hal_dma.o"
+"dnapi_power_test\stm32f4xx_hal_pwr.o"
+"dnapi_power_test\stm32f4xx_hal_pwr_ex.o"
+"dnapi_power_test\stm32f4xx_hal_cortex.o"
+"dnapi_power_test\stm32f4xx_hal.o"
+"dnapi_power_test\stm32f4xx_hal_exti.o"
+"dnapi_power_test\system_stm32f4xx.o"
+--library_type=microlib --strict --scatter "DNAPi_power_test\DNAPi_power_test.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "DNAPi_power_test.map" -o DNAPi_power_test\DNAPi_power_test.axf
