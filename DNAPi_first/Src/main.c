@@ -21,6 +21,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+#define DAC_VREF 	0x00
+#define DAC_VBIAS 0x01
+#define DAC_IOTA 	0x02
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -68,6 +72,9 @@ static void MX_SPI2_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM5_Init(void);
 static void MX_DAC_Init(void);
+uint16_t voltage_to_dac(float voltage, float max, float min);
+uint16_t dac_to_binary(uint16_t dac_value);
+void setup_DAC(float voltage, char DAC_Select);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -113,19 +120,19 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	
 	//data_to_send = 0x04D9;
-	data_to_send = 0xC826;
+	data_to_send = 0x0000;
 	HAL_GPIO_WritePin(GPIOC, V_REF_CS_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(&hspi2, (uint8_t*)&data_to_send, 2, 256);
 	HAL_GPIO_WritePin(GPIOC, V_REF_CS_Pin, GPIO_PIN_SET);
 	
 	//data_to_send = 0x09B2;	
-	data_to_send = 0xC826;
+	data_to_send = 0x0000;
 	HAL_GPIO_WritePin(GPIOC, V_BIAS_CS_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(&hspi2, (uint8_t*)&data_to_send, 2, 256);
 	HAL_GPIO_WritePin(GPIOC, V_BIAS_CS_Pin, GPIO_PIN_SET);
 	
 	//data_to_send = 0x0E8B;
-	data_to_send = 0x6413;
+	data_to_send = 0x0000;
 	HAL_GPIO_WritePin(GPIOC, IOTA_CS_Pin, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(&hspi2, (uint8_t*)&data_to_send, 2, 256);
 	HAL_GPIO_WritePin(GPIOC, IOTA_CS_Pin, GPIO_PIN_SET);
@@ -138,9 +145,17 @@ int main(void)
   while (1)
   {
     
-		HAL_SPI_TransmitReceive_IT(&hspi1, (uint8_t *)tx, (uint8_t*)buf, 4); 
-		tx[0] = buf[0];
-		tx[1] = buf[1];
+		//HAL_SPI_TransmitReceive_IT(&hspi1, (uint8_t *)tx, (uint8_t*)buf, 4); 
+		//tx[0] = buf[0];
+		//tx[1] = buf[1];
+		for(int i = 0; i<33; i++){
+		setup_DAC(0.1*i,DAC_VREF);
+		setup_DAC(0.1*i,DAC_VBIAS);
+		setup_DAC(0.1*i,DAC_IOTA);
+		HAL_Delay(10);
+		}
+
+
 		
 		/* USER CODE END WHILE */
 		//HAL_GPIO_WritePin(GPIOC, V_REF_CS_Pin, GPIO_PIN_RESET);
@@ -156,6 +171,58 @@ int main(void)
   }
   /* USER CODE END 3 */
 }
+
+uint16_t voltage_to_dac(float voltage, float max, float min)
+{
+	uint16_t dac_value = 0;
+	if (voltage > max)
+	{
+		dac_value = 0xFFF;
+	}else if (voltage < min)
+	{
+		dac_value = 0;
+	}else
+	{
+		dac_value = (int)((4095/max)*voltage);
+	}
+	return dac_value;
+}	
+
+uint16_t dac_to_binary(uint16_t dac_value)
+{
+	dac_value = (dac_value & 0x0FFF)<<2;
+	dac_value = (((dac_value & 0xFF)<<8) + (dac_value >> 8));
+	return dac_value;
+}
+
+void setup_DAC(float voltage, char DAC_Select)
+{
+	
+	uint16_t dac_value = voltage_to_dac(voltage, 3.24, 0);
+	
+	data_to_send = dac_to_binary(dac_value);
+
+	switch(DAC_Select){
+		case DAC_VREF:
+			HAL_GPIO_WritePin(GPIOC, V_REF_CS_Pin, GPIO_PIN_RESET);
+			HAL_SPI_Transmit(&hspi2, (uint8_t*)&data_to_send, 2, 256);
+			HAL_GPIO_WritePin(GPIOC, V_REF_CS_Pin, GPIO_PIN_SET);
+			break;
+			
+		case DAC_VBIAS:
+			HAL_GPIO_WritePin(GPIOC, V_BIAS_CS_Pin, GPIO_PIN_RESET);
+			HAL_SPI_Transmit(&hspi2, (uint8_t*)&data_to_send, 2, 256);
+			HAL_GPIO_WritePin(GPIOC, V_BIAS_CS_Pin, GPIO_PIN_SET);
+			break;
+		
+		case DAC_IOTA:
+			HAL_GPIO_WritePin(GPIOC, IOTA_CS_Pin, GPIO_PIN_RESET);
+			HAL_SPI_Transmit(&hspi2, (uint8_t*)&data_to_send, 2, 256);
+			HAL_GPIO_WritePin(GPIOC, IOTA_CS_Pin, GPIO_PIN_SET);
+			break;
+	}
+}
+
 
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
